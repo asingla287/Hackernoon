@@ -7,9 +7,6 @@ const resolvers = {
     feed: (root, args, context, info) => {
       return context.db.query.links({}, info)
     },
-    link: (root,args) => {
-      return context.db.query.links({id: args.id}, info)
-    }
   },
   Mutation: {
     post: (root, args, context, info) => {
@@ -20,30 +17,15 @@ const resolvers = {
         },
       }, info)
     },
-    updateLink: (root, args, context, info)=>{
-      return context.db.mutation.updateLink({
-        data: {
-          url: args.url,
-          description: args.description,
-        },
-        where: {
-          id: args.id
-        }
-      }, info)
-    },
-    deleteLink: (root, args, context, info)=>{
-      return context.db.mutation.deleteLink({
-        where: {
-          id: args.id
-        },
-      }, info)
-    },
-  }
+  },
 }
 
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
+  resolverValidationOptions: {
+    requireResolversForResolveType: false
+  },
   context: req => ({
     ...req,
     db: new Prisma({

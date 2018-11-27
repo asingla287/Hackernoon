@@ -4,6 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "add": "^2.0.6",
+    "global": "^4.3.2",
+    "graphql-cli": "^2.17.0",
     "graphql-yoga": "^1.16.7",
     "prisma-binding": "^2.2.8"
   }
