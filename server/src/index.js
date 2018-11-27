@@ -1,40 +1,42 @@
 const { GraphQLServer } = require('graphql-yoga')
+const { Prisma } = require('prisma-binding')
 
-let links = [{
-  id: 'link-0',
-  url: 'www.howtographql.com',
-  description: 'Fullstack tutorial for GraphQL'
-}]
-
-let idCount = links.length
 const resolvers = {
   Query: {
     info: () => `This is the API of a Hackernews Clone`,
-    feed: () => links,
+    feed: (root, args, context, info) => {
+      return context.db.query.links({}, info)
+    },
     link: (root,args) => {
-      return links.find(x => x.id == args.id)
+      return context.db.query.links({id: args.id}, info)
     }
   },
   Mutation: {
-    post: (root, args) => {
-      const link = {
-        id: `link-${idCount++}`,
-        description: args.description,
-        url: args.url
-      }
-      links.push(link)
-      return link
+    post: (root, args, context, info) => {
+      return context.db.mutation.createLink({
+        data: {
+          url: args.url,
+          description: args.description,
+        },
+      }, info)
     },
-    deleteLink: (root,args)=>{
-      let index = links.findIndex(x=> x.id == args.id)
-      let deletedLink  = links.splice(index,1)
-      return deletedLink[0]
+    updateLink: (root, args, context, info)=>{
+      return context.db.mutation.updateLink({
+        data: {
+          url: args.url,
+          description: args.description,
+        },
+        where: {
+          id: args.id
+        }
+      }, info)
     },
-    updateLink: (root,args)=>{
-      let index = links.findIndex(x=> x.id == args.id)
-      links[index].description = args.description
-      links[index].url = args.url
-      return links[index]
+    deleteLink: (root, args, context, info)=>{
+      return context.db.mutation.deleteLink({
+        where: {
+          id: args.id
+        },
+      }, info)
     },
   }
 }
@@ -42,5 +44,13 @@ const resolvers = {
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
+  context: req => ({
+    ...req,
+    db: new Prisma({
+      typeDefs: 'src/generated/prisma.graphql',
+      endpoint: 'https://eu1.prisma.sh/aman-singla/database/dev',
+      secret: 'mysecret123',
+      debug: true,
+    }),
+  }),
 })
-server.start(() => console.log(`Server is running on http://localhost:4000`))
